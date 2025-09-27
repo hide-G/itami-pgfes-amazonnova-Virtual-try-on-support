@@ -14,7 +14,7 @@ I recommend this open-source tool, as it allows you to easily try out Amazon Nov
 https://github.com/aws-samples/sample-genai-design-studio
 
 なお、AWS Generative AI Solution BoxからだとワンボタンでAWSにデプロイできるので非常に便利でした。<br>
-Furthermore, using the AWS Generative AI Solution Box, you can deploy to AWS with just one button, which was extremely convenient.
+Furthermore, using the AWS Generative AI Solution Box, you can deploy to AWS with just one button, which was extremely convenient.<br>
 https://aws-samples.github.io/sample-one-click-generative-ai-solutions/solutions/genai-design-studio/
 
 ## WebCameraShooting
