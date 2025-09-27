@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A4 4分割シール印刷</title>
+    <style>
+        /* 基本スタイル */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', 'メイリオ', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        /* 画面表示用のスタイル */
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .print-button {
+            margin: 20px auto;
+            display: block;
+            padding: 12px 30px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 画像表示エリア */
+        .image-preview {
+            padding: 20px;
+            background-color: white;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 800px;
+        }
+
+        .image-container {
+            border: 2px dashed #ccc;
+            padding: 10px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .image-container img {
+            max-width: 80%;
+            max-height: 80%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transform: rotate(90deg);
+            transform-origin: center;
+        }
+
+        .image-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* ファイル選択エリア */
+        .file-selection {
+            padding: 40px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .usage-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        /* 印刷用スタイル */
+        @media print {
+            /* リセット */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            html {
+                margin: 0;
+                padding: 0;
+            }
+            
+            body {
+                margin: 0;
+                padding: 0;
+                width: 210mm;
+                height: 297mm;
+            }
+
+            /* A4サイズの設定 */
+            @page {
+                size: A4;
+                margin: 0;
+            }
+
+            /* すべての要素を非表示 */
+            body > * {
+                display: none !important;
+            }
+
+            /* コンテナのみ表示 */
+            .container {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                margin: 0;
+                padding: 0; /* 余白を0に */
+                width: 210mm;
+                height: 297mm;
+                box-shadow: none;
+                background-color: white;
+            }
+
+            /* 画像プレビューエリア - 4分割グリッド */
+            .image-preview {
+                display: grid !important;
+                grid-template-columns: 105mm 105mm;
+                grid-template-rows: 148.5mm 148.5mm;
+                gap: 0;
+                margin: 0;
+                padding: 0;
+                width: 210mm;
+                height: 297mm;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+
+            /* 各画像コンテナ - 4分の1サイズ */
+            .image-container {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+                padding: 0;
+                width: 105mm;
+                height: 148.5mm;
+                border: none;
+                background-color: transparent;
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* 画像のスタイル - 回転を考慮 */
+            .image-container img {
+                display: block !important;
+                /* 90度回転後のサイズを考慮 */
+                max-width: 140mm; /* 高さ方向の最大値 */
+                max-height: 100mm; /* 幅方向の最大値 */
+                width: auto;
+                height: auto;
+                object-fit: contain;
+                border: none;
+                box-shadow: none;
+                transform: rotate(90deg); /* 縦向きに回転 */
+                transform-origin: center;
+            }
+
+            /* 番号ラベルを非表示 */
+            .image-number {
+                display: none !important;
+            }
+
+            /* その他の要素を確実に非表示 */
+            .print-button,
+            #printButton,
+            .file-selection,
+            .loading,
+            .error-message,
+            .image-preview > button,
+            .usage-info,
+            .reset-button {
+                display: none !important;
+            }
+
+            /* 改ページ防止 */
+            .container,
+            .image-preview,
+            .image-container {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+            }
+
+            /* 最初のページのみ表示 */
+            .container:first-of-type {
+                display: block !important;
+            }
+        }
+
+        /* ローディングアニメーション */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* エラーメッセージ */
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="print-button" onclick="printImages()" style="display: none;" id="printButton">
+            印刷 (A4 PDF)
+        </button>
+        
+        <div class="image-preview" id="imagePreview">
+            <div class="file-selection" id="fileSelection">
+                <p style="text-align: center; color: #333; margin-bottom: 20px; font-size: 18px; font-weight: bold;">
+                    A4 4分割シール印刷<br>
+                    画像ファイルを2個選択してください
+                </p>
+                <button class="print-button" onclick="document.getElementById('fileInput').click()">
+                    画像を選択
+                </button>
+                <input type="file" id="fileInput" style="display: none;" multiple accept="image/*" onchange="handleFileSelect(event)">
+                <div class="usage-info">
+                    <p><strong>使い方：</strong></p>
+                    <p>1. 「画像を選択」ボタンをクリック</p>
+                    <p>2. Ctrlキーを押しながら2つの画像を選択</p>
+                    <p>3. 4分割レイアウトで表示されます</p>
+                    <p>　・上段2枚：1つ目の画像（縦向き）</p>
+                    <p>　・下段2枚：2つ目の画像（縦向き）</p>
+                    <p>4. 「印刷」ボタンをクリック</p>
+                    <p>5. A4シール用紙に印刷</p>
+                </div>
+            </div>
+            <div class="loading" style="display: none;" id="loadingDiv">
+                <div class="loading-spinner"></div>
+                <p>画像を読み込んでいます...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 選択された画像を保存する配列
+        let selectedImages = [];
+
+        // ファイル選択時の処理
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            
+            // 画像ファイルのみをフィルタリング
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            
+            if (imageFiles.length === 0) {
+                showError('画像ファイルを選択してください');
+                return;
+            }
+            
+            if (imageFiles.length !== 2) {
+                showError('画像ファイルを2個選択してください');
+                event.target.value = ''; // 選択をリセット
+                return;
+            }
+            
+            // ローディング表示
+            document.getElementById('fileSelection').style.display = 'none';
+            document.getElementById('loadingDiv').style.display = 'block';
+            
+            // 画像を読み込んで表示
+            loadSelectedImages(imageFiles);
+        }
+
+        // 選択された画像を読み込んで表示
+        function loadSelectedImages(files) {
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = ''; // 既存の内容をクリア
+            
+            selectedImages = []; // 配列をリセット
+            let loadedCount = 0;
+            
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    loadedCount++;
+                    selectedImages.push({
+                        src: e.target.result,
+                        name: file.name
+                    });
+                    
+                    if (loadedCount === files.length) {
+                        // 4分割レイアウトで画像を表示
+                        displayImagesIn4Grid();
+                        
+                        // 印刷ボタンを表示
+                        document.getElementById('printButton').style.display = 'block';
+                        
+                        // 再選択ボタンを追加
+                        const resetButton = document.createElement('button');
+                        resetButton.className = 'print-button reset-button';
+                        resetButton.style.backgroundColor = '#6c757d';
+                        resetButton.style.gridColumn = '1 / -1'; // グリッド全幅
+                        resetButton.textContent = '画像を再選択';
+                        resetButton.onclick = resetSelection;
+                        resetButton.style.marginTop = '20px';
+                        previewContainer.appendChild(resetButton);
+                    }
+                };
+                
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // 4分割グリッドで画像を表示
+        function displayImagesIn4Grid() {
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = ''; // クリア
+            
+            // 印刷用スタイルの確認
+            previewContainer.style.display = 'grid';
+            previewContainer.style.gridTemplateColumns = '1fr 1fr';
+            previewContainer.style.gridTemplateRows = '1fr 1fr';
+            
+            // 4つの画像コンテナを作成
+            // 上段左: 画像1
+            createImageContainer(previewContainer, selectedImages[0], '画像1-左');
+            
+            // 上段右: 画像1
+            createImageContainer(previewContainer, selectedImages[0], '画像1-右');
+            
+            // 下段左: 画像2
+            createImageContainer(previewContainer, selectedImages[1], '画像2-左');
+            
+            // 下段右: 画像2
+            createImageContainer(previewContainer, selectedImages[1], '画像2-右');
+        }
+        
+        // 画像コンテナを作成する関数
+        function createImageContainer(parent, imageData, labelText) {
+            const container = document.createElement('div');
+            container.className = 'image-container';
+            
+            const img = document.createElement('img');
+            img.src = imageData.src;
+            img.alt = imageData.name;
+            
+            const label = document.createElement('div');
+            label.className = 'image-number';
+            label.textContent = labelText;
+            
+            container.appendChild(img);
+            container.appendChild(label);
+            parent.appendChild(container);
+        }
+        
+        // 選択をリセット
+        function resetSelection() {
+            selectedImages = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('printButton').style.display = 'none';
+            
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = '';
+            
+            // ファイル選択画面を再表示
+            const fileSelection = document.getElementById('fileSelection');
+            fileSelection.style.display = 'block';
+            previewContainer.appendChild(fileSelection);
+        }
+
+        // エラーメッセージを表示
+        function showError(message) {
+            const previewContainer = document.getElementById('imagePreview');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            previewContainer.appendChild(errorDiv);
+        }
+
+        // 印刷機能
+        function printImages() {
+            if (selectedImages.length !== 2) {
+                showError('画像を2個選択してください');
+                return;
+            }
+            
+            // 印刷前の確認
+            if (confirm('A4 4分割シールとして印刷します。よろしいですか？')) {
+                // 印刷前処理
+                preparePrint();
+                
+                // 少し待ってから印刷
+                setTimeout(() => {
+                    window.print();
+                    
+                    // 印刷後の処理
+                    setTimeout(() => {
+                        afterPrint();
+                    }, 100);
+                }, 100);
+            }
+        }
+        
+        // 印刷前処理
+        function preparePrint() {
+            // 再選択ボタンを非表示
+            const resetButton = document.querySelector('.reset-button');
+            if (resetButton) {
+                resetButton.style.display = 'none';
+            }
+            
+            // コンテナの高さを明示的に設定
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.height = '297mm';
+                container.style.maxHeight = '297mm';
+            }
+            
+            const preview = document.querySelector('.image-preview');
+            if (preview) {
+                preview.style.height = '287mm';
+                preview.style.maxHeight = '287mm';
+            }
+        }
+        
+        // 印刷後処理
+        function afterPrint() {
+            // 再選択ボタンを再表示
+            const resetButton = document.querySelector('.reset-button');
+            if (resetButton) {
+                resetButton.style.display = 'block';
+            }
+            
+            // スタイルをリセット
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.height = '';
+                container.style.maxHeight = '';
+            }
+            
+            const preview = document.querySelector('.image-preview');
+            if (preview) {
+                preview.style.height = '';
+                preview.style.maxHeight = '';
+            }
+        }
+
+        // キーボードショートカット (Ctrl+P)
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'p') {
+                event.preventDefault();
+                printImages();
+            }
+        });
+    </script>
+</body>
+</html>
