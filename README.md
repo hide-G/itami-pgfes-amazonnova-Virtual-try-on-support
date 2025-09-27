@@ -1,11 +1,11 @@
 # itami-pgfes-amazonnova-Virtual-try-on-support<br>
-大阪駆動開発で、「kidsPGフェスいたみ2025 こどもプログラミングまつり」に参加した際にプログラムです。<br>
+大阪駆動開発で、「kidsPGフェスいたみ2025 こどもプログラミングまつり」に参加した際に作成した2個のサポート用ミニプログラムです。<br>
 https://kidspg.net/fes/
 
-2個のミニアプリのコーディングは、Bedrock Engineerを使わせていただきました。<br>
+その際のAIコーディングは、Bedrock Engineerを使わせていただきました。<br>
 https://github.com/aws-samples/bedrock-engineer
 
-メイン部分は、GenAI Design Studioを使わせていただきました。<br>
+メインである撮影した画像を仮想試着(Virtual try-on)する機能は、GenAI Design Studioを使わせていただきました。<br>
 https://github.com/aws-samples/sample-genai-design-studio
 
 ## WebCameraShooting
